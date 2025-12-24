@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Business Card Maker v7 - Upload Feature</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card-vertical { width: 400px; min-height: 680px; display: flex; flex-direction: column; }
+        .card-horizontal { width: 650px; min-height: 420px; display: flex; flex-direction: row; }
+        .transition-all { transition: all 0.3s ease; }
+        #qrcode img { margin: 0 auto; }
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+            background: #f3f4f6;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-slate-500 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-5 bg-white p-6 rounded-3xl shadow-2xl text-gray-800 self-start">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-700 italic">Data & Upload Foto</h2>
+            
+            <div class="grid grid-cols-2 gap-3 overflow-y-auto max-h-[75vh] pr-2">
+                <div class="col-span-2">
+                    <label class="text-xs font-bold text-gray-400 uppercase">Model</label>
+                    <div class="flex gap-2 mt-1">
+                        <button onclick="setMode('vertical')" id="btnV" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold">Vertikal</button>
+                        <button onclick="setMode('horizontal')" id="btnH" class="flex-1 bg-gray-200 text-gray-600 py-2 rounded-lg font-bold">Horizontal</button>
+                    </div>
+                </div>
+
+                <div class="col-span-2 border-2 border-dashed border-blue-100 p-3 rounded-xl">
+                    <label class="text-xs font-bold text-blue-500 uppercase block mb-2 text-center">Upload Foto Profil</label>
+                    <input type="file" id="uploadPhoto" accept="image/*" onchange="previewFile()" class="hidden">
+                    <label for="uploadPhoto" class="custom-file-upload hover:bg-blue-50 transition">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> Pilih Foto dari Galeri
+                    </label>
+                    <p class="text-[10px] text-gray-400 mt-2 text-center">Atau gunakan Link URL di bawah ini</p>
+                    <input type="text" id="inPhoto" oninput="updateCard()" placeholder="https://link-foto.com/foto.jpg" class="w-full p-2 border rounded mt-1 bg-gray-50 text-xs">
+                </div>
+
+                <div class="col-span-2 border-t pt-2 mt-2">
+                    <label class="text-xs font-bold text-gray-400 uppercase">Perusahaan</label>
+                    <input type="text" id="inCorp" oninput="updateCard()" placeholder="Nama Perusahaan" class="w-full p-2 border rounded mb-1 bg-gray-50">
+                    <input type="text" id="inCorpDetail" oninput="updateCard()" placeholder="Alamat & Telp Kantor" class="w-full p-2 border rounded bg-gray-50 text-xs">
+                </div>
+
+                <div><label class="text-[10px] font-bold">Nama</label><input type="text" id="inNama" oninput="updateCard()" class="w-full p-2 border rounded bg-gray-50"></div>
+                <div><label class="text-[10px] font-bold">Jabatan</label><input type="text" id="inJabatan" oninput="updateCard()" class="w-full p-2 border rounded bg-gray-50"></div>
+                
+                <div><label class="text-[10px] font-bold">WhatsApp 1</label><input type="number" id="inWA1" oninput="updateCard()" class="w-full p-2 border rounded bg-gray-50"></div>
+                <div><label class="text-[10px] font-bold">WhatsApp 2</label><input type="number" id="inWA2" oninput="updateCard()" class="w-full p-2 border rounded bg-gray-50"></div>
+                
+                <div class="col-span-2 grid grid-cols-2 gap-2">
+                    <input type="email" id="inEmail" oninput="updateCard()" placeholder="Email" class="p-2 border rounded bg-gray-50 text-xs">
+                    <input type="text" id="inWeb" oninput="updateCard()" placeholder="Website" class="p-2 border rounded bg-gray-50 text-xs">
+                </div>
+
+                <div class="col-span-2 grid grid-cols-2 gap-2">
+                    <input type="text" id="inIG" oninput="updateCard()" placeholder="Instagram" class="p-2 border rounded bg-gray-50 text-xs">
+                    <input type="text" id="inFB" oninput="updateCard()" placeholder="Facebook" class="p-2 border rounded bg-gray-50 text-xs">
+                </div>
+
+                <div class="col-span-2 flex items-center gap-2">
+                    <label class="text-xs font-bold">Warna Tema:</label>
+                    <input type="color" id="inColor" oninput="updateCard()" value="#2563eb" class="flex-grow h-10 border rounded cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 flex flex-col items-center">
+            <div id="card-area" class="card-vertical bg-white rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-4 border-white">
+                
+                <div id="headerBg" class="p-6 text-center text-white flex flex-col justify-center min-h-[140px] shadow-lg">
+                    <h3 id="dispCorp" class="text-lg font-black tracking-widest uppercase">NAMA PERUSAHAAN</h3>
+                    <p id="dispCorpDetail" class="text-[10px] mt-2 opacity-90 leading-relaxed font-medium">Alamat & Telp</p>
+                </div>
+
+                <div id="bodyLayout" class="flex flex-col flex-grow bg-white p-6 items-center">
+                    
+                    <div id="photoBox" class="mb-4">
+                        <img id="dispPhoto" src="https://ui-avatars.com/api/?name=User&background=random" class="w-28 h-28 rounded-full border-4 border-gray-100 shadow-xl object-cover bg-white">
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <h2 id="dispNama" class="text-2xl font-bold text-gray-800">Nama Lengkap</h2>
+                        <p id="dispJabatan" class="font-bold text-[10px] tracking-[0.3em] uppercase mt-1">JABATAN</p>
+                    </div>
+
+                    <div class="w-full space-y-2">
+                        <div class="flex gap-2">
+                            <a id="linkWA1" href="#" class="flex-1 flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[10px] font-bold">
+                                <i class="fab fa-whatsapp text-green-500 text-lg mr-2"></i> <span id="dispWA1">-</span>
+                            </a>
+                            <a id="linkWA2" href="#" class="flex-1 hidden items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[10px] font-bold">
+                                <i class="fab fa-whatsapp text-emerald-500 text-lg mr-2"></i> <span id="dispWA2">-</span>
+                            </a>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a id="linkEmail" href="#" class="flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[9px] font-bold">
+                                <i class="far fa-envelope text-blue-500 text-lg mr-2"></i> <span id="dispEmail">-</span>
+                            </a>
+                            <a id="linkWeb" href="#" class="flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[9px] font-bold">
+                                <i class="fas fa-globe text-indigo-500 text-lg mr-2"></i> <span id="dispWeb">-</span>
+                            </a>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[9px] font-bold">
+                                <i class="fab fa-instagram text-pink-500 text-lg mr-2"></i> <span id="dispIG">-</span>
+                            </div>
+                            <div class="flex items-center bg-gray-50 p-2 rounded-xl border border-gray-100 text-[9px] font-bold">
+                                <i class="fab fa-facebook text-blue-800 text-lg mr-2"></i> <span id="dispFB">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-4 flex flex-col items-center">
+                        <div id="qrcode" class="p-2 bg-white rounded-lg border"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="saveCard()" class="mt-8 bg-slate-800 hover:bg-black text-white px-12 py-4 rounded-2xl font-bold shadow-2xl transition flex items-center transform hover:scale-105">
+                <i class="fas fa-file-download mr-3"></i> DOWNLOAD PNG
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const inputs = ['inCorp','inCorpDetail','inNama','inJabatan','inWA1','inWA2','inEmail','inWeb','inIG','inFB','inPhoto','inColor'];
+        let mode = 'vertical';
+
+        window.onload = () => {
+            inputs.forEach(id => {
+                const val = localStorage.getItem(id);
+                if (val) document.getElementById(id).value = val;
+            });
+            // Load foto profil tersimpan (jika ada)
+            const savedPhoto = localStorage.getItem('profileImg');
+            if(savedPhoto) document.getElementById('dispPhoto').src = savedPhoto;
+            
+            updateCard();
+        };
+
+        // FUNGSI UPLOAD FOTO
+        function previewFile() {
+            const preview = document.getElementById('dispPhoto');
+            const file = document.getElementById('uploadPhoto').files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = function () {
+                preview.src = reader.result;
+                localStorage.setItem('profileImg', reader.result); // Simpan foto lokal
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setMode(m) {
+            mode = m;
+            const card = document.getElementById('card-area');
+            const header = document.getElementById('headerBg');
+            const btnV = document.getElementById('btnV');
+            const btnH = document.getElementById('btnH');
+            
+            if(m === 'horizontal') {
+                card.className = "card-horizontal bg-white rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-4 border-white";
+                header.className = "w-1/3 p-6 text-center text-white flex flex-col justify-center shadow-lg";
+                btnH.className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold";
+                btnV.className = "flex-1 bg-gray-200 text-gray-600 py-2 rounded-lg font-bold";
+            } else {
+                card.className = "card-vertical bg-white rounded-[2.5rem] shadow-2xl overflow-hidden transition-all duration-500 border-4 border-white";
+                header.className = "p-6 text-center text-white flex flex-col justify-center min-h-[140px] shadow-lg";
+                btnV.className = "flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold";
+                btnH.className = "flex-1 bg-gray-200 text-gray-600 py-2 rounded-lg font-bold";
+            }
+            updateCard();
+        }
+
+        function updateCard() {
+            const data = {};
+            inputs.forEach(id => {
+                data[id] = document.getElementById(id).value;
+                localStorage.setItem(id, data[id]);
+            });
+
+            document.getElementById('dispCorp').innerText = data.inCorp || "NAMA PERUSAHAAN";
+            document.getElementById('dispCorpDetail').innerText = data.inCorpDetail || "Alamat & Telp Kantor";
+            document.getElementById('dispNama').innerText = data.inNama || "Nama Lengkap";
+            document.getElementById('dispJabatan').innerText = data.inJabatan || "JABATAN";
+            document.getElementById('dispWA1').innerText = data.inWA1 || "-";
+            document.getElementById('dispEmail').innerText = data.inEmail || "-";
+            document.getElementById('dispWeb').innerText = data.inWeb || "-";
+            document.getElementById('dispIG').innerText = data.inIG || "-";
+            document.getElementById('dispFB').innerText = data.inFB || "-";
+
+            // WhatsApp 2 Logic
+            const wa2Link = document.getElementById('linkWA2');
+            if(data.inWA2) {
+                wa2Link.classList.remove('hidden');
+                wa2Link.classList.add('flex');
+                document.getElementById('dispWA2').innerText = data.inWA2;
+                wa2Link.href = `https://wa.me/${data.inWA2}`;
+            } else {
+                wa2Link.classList.add('hidden');
+            }
+
+            // Clickable Links
+            document.getElementById('linkWA1').href = `https://wa.me/${data.inWA1}`;
+            document.getElementById('linkEmail').href = `mailto:${data.inEmail}`;
+            document.getElementById('linkWeb').href = data.inWeb.includes('://') ? data.inWeb : `https://${data.inWeb}`;
+            
+            // Warna & Link Photo
+            document.getElementById('headerBg').style.backgroundColor = data.inColor;
+            document.getElementById('dispJabatan').style.color = data.inColor;
+            
+            // Update foto jika input link diisi (timpa upload)
+            if(data.inPhoto) document.getElementById('dispPhoto').src = data.inPhoto;
+
+            // QR Code
+            const qrBox = document.getElementById("qrcode");
+            qrBox.innerHTML = "";
+            new QRCode(qrBox, {
+                text: data.inWeb || `https://wa.me/${data.inWA1}`,
+                width: 80, height: 80, colorDark: "#1e293b"
+            });
+        }
+
+        async function saveCard() {
+            const element = document.getElementById('card-area');
+            const canvas = await html2canvas(element, { 
+                scale: 3, 
+                useCORS: true,
+                allowTaint: true 
+            });
+            const link = document.createElement('a');
+            link.download = `KartuNamaDigital.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+    </script>
+</body>
+</html>
